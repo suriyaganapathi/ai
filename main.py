@@ -14,10 +14,22 @@ from app.data_ingestion.views import router as data_ingestion_router
 from app.ai_calling.views import router as ai_calling_router
 from app.auth.views import router as auth_router
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle (startup/shutdown)"""
+    # Startup: Test DB connection
+    from app.db import test_connection
+    await test_connection()
+    yield
+    # Shutdown: Clean up resources if needed (not needed for Motor)
+
 app = FastAPI(
     title="AIaaS Finance Platform",
     version="1.0.0",
-    description="AI as a Service for Finance Agencies"
+    description="AI as a Service for Finance Agencies",
+    lifespan=lifespan
 )
 
 # --- CORS (allow all for development; restrict in production) ---
@@ -34,13 +46,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# --- Database Connection on Startup ---
-@app.on_event("startup")
-async def startup_db_client():
-    """Test database connection on startup"""
-    from app.db import test_connection
-    await test_connection()
 
 # Include routers (expand as phases progress)
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -87,33 +92,28 @@ def run_flask_server():
     run_flask_server()
 
 
-# VERCEL DEPLOYMENT NOTE: 
-# The following block is disabled for Vercel serverless deployment.
-# Vercel imports the 'app' object directly. 
-# Threading does not work in serverless functions.
-# To run locally, uncomment the block below.
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     
-#     print("\n" + "="*60)
-#     print("🚀 STARTING AIaaS FINANCE PLATFORM")
-#     print("="*60)
-#     print("📡 FastAPI Server: http://127.0.0.1:8000")
-#     print("   - API endpoints for triggering calls")
-#     print("   - Swagger UI: http://127.0.0.1:8000/docs")
-#     print("\n🔌 Flask WebSocket Server: http://127.0.0.1:5000")
-#     print("   - Vonage webhooks (/webhooks/answer, /webhooks/event)")
-#     print("   - WebSocket for real-time audio (/socket/<uuid>)")
-#     print("\n⚠️  IMPORTANT:")
-#     print("   Update your Vonage dashboard with:")
-#     print("   Answer URL: <YOUR_NGROK_URL>/webhooks/answer")
-#     print("   Event URL: <YOUR_NGROK_URL>/webhooks/event")
-#     print("="*60 + "\n")
-#     
-#     # Start Flask server in a separate thread
-#     # flask_thread = threading.Thread(target=run_flask_server, daemon=True)
-#     # flask_thread.start()
-#     
-#     # Start FastAPI server with reload enabled (use import string for reload to work)
-#     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+if __name__ == "__main__":
+    import uvicorn
+    import threading
+    
+    print("\n" + "="*60)
+    print("🚀 STARTING AIaaS FINANCE PLATFORM")
+    print("="*60)
+    print("📡 FastAPI Server: http://127.0.0.1:8000")
+    print("   - API endpoints for triggering calls")
+    print("   - Swagger UI: http://127.0.0.1:8000/docs")
+    print("\n🔌 Flask WebSocket Server: http://127.0.0.1:5000")
+    print("   - Vonage webhooks (/webhooks/answer, /webhooks/event)")
+    print("   - WebSocket for real-time audio (/socket/<uuid>)")
+    print("\n⚠️  IMPORTANT:")
+    print("   Update your Vonage dashboard with:")
+    print("   Answer URL: <YOUR_NGROK_URL>/webhooks/answer")
+    print("   Event URL: <YOUR_NGROK_URL>/webhooks/event")
+    print("="*60 + "\n")
+    
+    # Start Flask server in a separate thread
+    flask_thread = threading.Thread(target=run_flask_server, daemon=True)
+    flask_thread.start()
+    
+    # Start FastAPI server with reload enabled
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
