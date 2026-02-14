@@ -17,7 +17,7 @@ cryptography
 # Note: wave is a built-in Python module, no need to install
 
 # Google Generative AI (Gemini)
-google-genai
+google-generativeai
 
 # HTTP requests
 requests
