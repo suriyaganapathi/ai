@@ -23,6 +23,8 @@ class Settings:
     VONAGE_API_SECRET = os.getenv("VONAGE_API_SECRET", "")
     VONAGE_APPLICATION_ID = os.getenv("VONAGE_APPLICATION_ID", "")
     VONAGE_PRIVATE_KEY_PATH = os.getenv("VONAGE_PRIVATE_KEY_PATH", "private.key")
+    # Support inline private key for cloud deployments (e.g. Vercel)
+    VONAGE_PRIVATE_KEY = os.getenv("VONAGE_PRIVATE_KEY", "")
     VONAGE_FROM_NUMBER = os.getenv("VONAGE_FROM_NUMBER", "")
     
     # ---------- Sarvam AI Configuration ----------

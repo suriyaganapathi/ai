@@ -42,12 +42,25 @@ audio_cache = {}
 
 # Initialize Vonage client
 try:
-    vonage_client = Vonage(Auth(
-        application_id=settings.VONAGE_APPLICATION_ID,
-        private_key=settings.VONAGE_PRIVATE_KEY_PATH
-    ))
-    voice = vonage_client.voice
-    print("[VONAGE] ✅ Vonage Voice client initialized")
+    private_key_content = settings.VONAGE_PRIVATE_KEY
+    
+    # If no env var, try reading from file
+    if not private_key_content and os.path.exists(settings.VONAGE_PRIVATE_KEY_PATH):
+        with open(settings.VONAGE_PRIVATE_KEY_PATH, 'r') as key_file:
+            private_key_content = key_file.read()
+    
+    if private_key_content:
+        vonage_client = Vonage(Auth(
+            application_id=settings.VONAGE_APPLICATION_ID,
+            private_key=private_key_content
+        ))
+        voice = vonage_client.voice
+        print("[VONAGE] ✅ Vonage Voice client initialized")
+    else:
+        print("[VONAGE] ⚠️  Private key not found (env var or file). Voice features disabled.")
+        vonage_client = None
+        voice = None
+        
 except Exception as e:
     print(f"[VONAGE] ⚠️  Failed to initialize: {e}")
     vonage_client = None
@@ -73,8 +86,20 @@ else:
 def generate_jwt_token():
     """Generate JWT token for Vonage API"""
     try:
-        with open(settings.VONAGE_PRIVATE_KEY_PATH, 'rb') as key_file:
-            private_key = key_file.read()
+        private_key = settings.VONAGE_PRIVATE_KEY
+        
+        # If no env var, try reading from file
+        if not private_key and os.path.exists(settings.VONAGE_PRIVATE_KEY_PATH):
+            with open(settings.VONAGE_PRIVATE_KEY_PATH, 'r') as key_file:
+                private_key = key_file.read()
+                
+        if not private_key:
+            print("[JWT] ❌ Private key not found")
+            return None
+        
+        # Ensure it's bytes
+        if isinstance(private_key, str):
+            private_key = private_key.encode('utf-8')
         
         payload = {
             'application_id': settings.VONAGE_APPLICATION_ID,
