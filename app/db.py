@@ -9,7 +9,12 @@ from config import settings
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+# Use StreamHandler for Vercel/Cloud logs (stdout)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 logger = logging.getLogger(__name__)
 
 # Initialize async MongoDB client

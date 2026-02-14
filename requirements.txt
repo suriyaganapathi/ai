@@ -31,7 +31,8 @@ starlette
 # Additional utilities
 pydantic
 pydantic-settings
-WebSocket
+# WebSocket
+# websocket-client  # Uncomment if needed, but flask-sock handles WS
 
 # Data processing dependencies
 pandas
